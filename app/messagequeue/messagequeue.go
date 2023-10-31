@@ -7,12 +7,20 @@ import (
 	pb "github.com/ar2rworld/botsservice/app/messageservice"
 )
 
-func NewMessageQueue() MessageQueue {
-	return MessageQueue{queue: list.New()}
+func NewMessageQueue(n string) MessageQueue {
+	return MessageQueue{
+		name: n,
+		queue: list.New(),
+	}
 }
 
 type MessageQueue struct {
+	name string
 	queue *list.List
+}
+
+func (q *MessageQueue) GetName() string {
+	return q.name
 }
 
 func (q *MessageQueue) Pop() (pb.MessageReply, error) {
