@@ -1,0 +1,48 @@
+// Copyright 2015 gRPC authors.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option go_package = "github.com/ar2rworld/botsservice/app/messageservice";
+
+package messageservice;
+
+// The greeting service definition.
+service MessageService {
+  rpc Register (RegisterRequest) returns (TokenReply) {}
+  rpc SendUpdates (Updates) returns (stream MessageReply) {}
+}
+
+message RegisterRequest {
+  string name = 1;
+}
+message TokenReply {
+  string token = 1;
+}
+
+message Update {
+  int64 chatID = 1;
+  int64 userID = 2;
+  string text = 3;
+}
+message Updates {
+  string botname = 1;
+  repeated Update updates = 2;
+}
+
+message MessageReply {
+  int64 chatID = 1;
+  int64 userID = 2;
+  string text = 3;
+}
