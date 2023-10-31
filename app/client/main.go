@@ -109,10 +109,10 @@ func main() {
 			for {
 				mr, err := stream.Recv()
 				if err == io.EOF {
-						break
+					break
 				}
 				if err != nil {
-						log.Fatalf("%v.SendUpdates(_) = _, %v", c, err)
+					log.Fatalf("%v.SendUpdates(_) = _, %v", c, err)
 				}
 				if mr.GetText() == "" {
 					continue
