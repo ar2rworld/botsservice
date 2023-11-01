@@ -39,8 +39,12 @@ func main() {
 	if os.Getenv("olabot_token") == "" {
 		log.Fatal("Missing olabot_token in env")
 	}
+	if os.Getenv("all_over_the_news_tomorrow_bot_token") == "" {
+		log.Fatal("Missing all_over_the_news_tomorrow_bot_token in env")
+	}
 	server := newServer()
 	server.AddBot(bots.NewOlaBot(os.Getenv("olabot_token")))
+	server.AddBot(bots.NewAllOverTheNewsTomorrowBot(os.Getenv("all_over_the_news_tomorrow_bot_token")))
 
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterMessageServiceServer(grpcServer, server)
