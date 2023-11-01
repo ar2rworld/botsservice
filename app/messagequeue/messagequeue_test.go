@@ -7,7 +7,7 @@ import (
 )
 
 func TestMessageQueue(t *testing.T) {
-	q := NewMessageQueue()
+	q := NewMessageQueue("")
 	if q.Len() != 0 {
 		t.Error("New queue should be empty")
 	}
