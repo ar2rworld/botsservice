@@ -20,6 +20,11 @@ type Bot interface {
 	GetToken() string
 }
 
+type BotQueue struct {
+	Bot Bot
+	Queue mq.MessageQueue
+}
+
 func main() {
 	var addr = os.Getenv("MESSAGESERVICE_ADDRESS")
 	if addr == "" {
@@ -57,65 +62,48 @@ func main() {
 }
 
 type server struct {
-	queue []mq.MessageQueue
-	bots []Bot
+	bq map[string]BotQueue
 	pb.UnimplementedMessageServiceServer
 }
 
 func newServer() *server {
-	return &server{ bots: []Bot{}, queue: []mq.MessageQueue{}}
+	return &server{ bq: map[string]BotQueue{} }
 }
 
 func (s *server) AddBot (b Bot) {
-	s.bots = append(s.bots, b)
+	name := b.GetName()
+	s.bq[name] = BotQueue{ Bot: b, Queue: mq.NewMessageQueue(name)}
 }
 
-func (s *server) GetBot(name string) (Bot, error) {
-	for _, b := range s.bots {
-		if b.GetName() == name {
-			return b, nil
-		}
-	}
-	return nil, fmt.Errorf("Could not find bot: %s", name)
-}
+func (s *server) GetBotQueue(name string) (BotQueue, error) {
+	bq := s.bq[name]
 
-func (s *server) GetBotQueue(name string) (mq.MessageQueue, error) {
-	var messagequeue mq.MessageQueue
-	for _, mq := range s.queue {
-		if mq.GetName() == name {
-			return messagequeue, nil
-		}
+	if bq.Bot == nil {
+		return BotQueue{}, fmt.Errorf("Could not find bot: %s", name)
 	}
-
-	return mq.MessageQueue{}, fmt.Errorf("Could not find MessageQueue for %s", name)
+	return bq, nil
 }
 
 func (s *server) Register(ctx context.Context, r *pb.RegisterRequest) (*pb.TokenReply, error) {
-	var bot Bot
-	var n = r.GetName()
-	for _, b := range s.bots {
-		if b.GetName() == n {
-			bot = b
-		}
-	}
-	if bot == nil {
-		return &pb.TokenReply{}, fmt.Errorf("Could not find bot: %s", n)
+	var name = r.GetName()
+	
+	bq, err := s.GetBotQueue(name)
+	if err != nil {
+		return &pb.TokenReply{}, fmt.Errorf("Error occured on GetBotQueue: %v", err)
 	}
 
-	s.queue = append(s.queue, mq.NewMessageQueue(n))
-
-	log.Printf("Registed: %s", n)
-	return &pb.TokenReply{ Token: bot.GetToken() }, nil
+	log.Printf("Registed: %s", bq.Bot.GetName())
+	return &pb.TokenReply{ Token: bq.Bot.GetToken() }, nil
 }
 
 func (s *server) SendUpdates(u *pb.Updates, stream pb.MessageService_SendUpdatesServer) error {
 	bn := u.GetBotname()
-	q, err := s.GetBotQueue(bn)
+	bq, err := s.GetBotQueue(bn)
 	if err != nil {
 		log.Fatal(err)
 	}
-	for q.Len() > 0 {
-		m, err := q.Pop()
+	for bq.Queue.Len() > 0 {
+		m, err := bq.Queue.Pop()
 		if err != nil {
 			return err
 		}
@@ -124,16 +112,9 @@ func (s *server) SendUpdates(u *pb.Updates, stream pb.MessageService_SendUpdates
 			return err
 		}
 	}
-
-	// TODO: check HandleUpdate on bot
-	
-	bot, err := s.GetBot(bn)
-	if err != nil {
-		return err
-	}
 	
 	for _, update := range u.Updates {
-		r, err := bot.HandleUpdate(update)
+		r, err := bq.Bot.HandleUpdate(update)
 		if err != nil {
 			return err
 		}
