@@ -20,9 +20,9 @@ func TestMessageQueue(t *testing.T) {
 		t.Error("New queue pop should return \"Queue is empty\" error")
 	}
 
-	q.Push(&pb.MessageReply{Text: "1"})
-	q.Push(&pb.MessageReply{Text: "2"})
-	q.Push(&pb.MessageReply{Text: "3"})
+	q.Push(pb.MessageReply{Text: "1"})
+	q.Push(pb.MessageReply{Text: "2"})
+	q.Push(pb.MessageReply{Text: "3"})
 
 	if q.Len() != 3 {
 		t.Error("Queue should have 3 elements")

@@ -29,15 +29,15 @@ func (q *MessageQueue) Pop() (pb.MessageReply, error) {
 	}
 	el := q.queue.Front()
 	q.queue.Remove(el)
-	m, ok := el.Value.(*pb.MessageReply)
+	m, ok := el.Value.(pb.MessageReply)
 	
 	if !ok {
 		return pb.MessageReply{}, fmt.Errorf("Could not cast to Message")
 	}
 	
-	return *m, nil
+	return m, nil
 }
-func (q *MessageQueue) Push(m *pb.MessageReply) {
+func (q *MessageQueue) Push(m pb.MessageReply) {
 	q.queue.PushBack(m)
 }
 func (q *MessageQueue) Len() int {
