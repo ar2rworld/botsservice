@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"strconv"
 
 	"github.com/ar2rworld/botsservice/app/bots"
 	mq "github.com/ar2rworld/botsservice/app/messagequeue"
@@ -47,7 +48,18 @@ func main() {
 	if os.Getenv("all_over_the_news_tomorrow_bot_token") == "" {
 		log.Fatal("Missing all_over_the_news_tomorrow_bot_token in env")
 	}
+
+	if os.Getenv("ADMIN_ID") == "" {
+		log.Fatal("Missing olabot_token in env")
+	}
+	adminID, err := strconv.ParseInt(os.Getenv("ADMIN_ID"), 10, 64)
+	if err != nil {
+		log.Fatal("Error converting ADMIN_ID")
+	}
+
+
 	server := newServer()
+	server.AdminID = adminID
 	server.AddBot(bots.NewOlaBot(os.Getenv("olabot_token")))
 	server.AddBot(bots.NewAllOverTheNewsTomorrowBot(os.Getenv("all_over_the_news_tomorrow_bot_token")))
 
@@ -64,6 +76,8 @@ func main() {
 type server struct {
 	bq map[string]BotQueue
 	pb.UnimplementedMessageServiceServer
+
+	AdminID int64
 }
 
 func newServer() *server {
@@ -93,6 +107,9 @@ func (s *server) Register(ctx context.Context, r *pb.RegisterRequest) (*pb.Token
 	}
 
 	log.Printf("Registed: %s", bq.Bot.GetName())
+
+	bq.Queue.Push(pb.MessageReply{ Text: "Hello", ChatID: s.AdminID, UserID: s.AdminID })
+
 	return &pb.TokenReply{ Token: bq.Bot.GetToken() }, nil
 }
 
