@@ -57,58 +57,52 @@ func main() {
 }
 
 type server struct {
-	queue *[]mq.MessageQueue
-	bots []*Bot
+	queue []mq.MessageQueue
+	bots []Bot
 	pb.UnimplementedMessageServiceServer
 }
 
 func newServer() *server {
-	return &server{ bots: []*Bot{}, queue: &[]mq.MessageQueue{}}
+	return &server{ bots: []Bot{}, queue: []mq.MessageQueue{}}
 }
 
 func (s *server) AddBot (b Bot) {
-	s.bots = append(s.bots, &b)
+	s.bots = append(s.bots, b)
 }
 
 func (s *server) GetBot(name string) (Bot, error) {
-	var bot *Bot
 	for _, b := range s.bots {
-		if (*b).GetName() == name {
-			bot = b
+		if b.GetName() == name {
+			return b, nil
 		}
 	}
-	if bot == nil {
-		return *bot, fmt.Errorf("Could not find bot: %s", name)
-	} 
-	return *bot, nil
+	return nil, fmt.Errorf("Could not find bot: %s", name)
 }
 
-func (s *server) GetBotQueue(name string) (*mq.MessageQueue, error) {
-	var messagequeue *mq.MessageQueue
-	for _, mq := range *s.queue {
+func (s *server) GetBotQueue(name string) (mq.MessageQueue, error) {
+	var messagequeue mq.MessageQueue
+	for _, mq := range s.queue {
 		if mq.GetName() == name {
-			messagequeue = &mq
+			return messagequeue, nil
 		}
 	}
-	if messagequeue == nil {
-		return &mq.MessageQueue{}, fmt.Errorf("Could not find MessageQueue for %s", name)
-	}
-	return messagequeue, nil
+
+	return mq.MessageQueue{}, fmt.Errorf("Could not find MessageQueue for %s", name)
 }
 
 func (s *server) Register(ctx context.Context, r *pb.RegisterRequest) (*pb.TokenReply, error) {
 	var bot Bot
 	var n = r.GetName()
 	for _, b := range s.bots {
-		if (*b).GetName() == n {
-			bot = *b
+		if b.GetName() == n {
+			bot = b
 		}
 	}
 	if bot == nil {
 		return &pb.TokenReply{}, fmt.Errorf("Could not find bot: %s", n)
 	}
 
-	*s.queue = append(*s.queue, mq.NewMessageQueue(n))
+	s.queue = append(s.queue, mq.NewMessageQueue(n))
 
 	log.Printf("Registed: %s", n)
 	return &pb.TokenReply{ Token: bot.GetToken() }, nil
