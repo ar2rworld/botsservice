@@ -58,23 +58,23 @@ func main() {
 
 type server struct {
 	queue *[]mq.MessageQueue
-	bots *[]Bot
+	bots []*Bot
 	pb.UnimplementedMessageServiceServer
 }
 
 func newServer() *server {
-	return &server{ bots: &[]Bot{}, queue: &[]mq.MessageQueue{}}
+	return &server{ bots: []*Bot{}, queue: &[]mq.MessageQueue{}}
 }
 
 func (s *server) AddBot (b Bot) {
-	*s.bots = append(*s.bots, b)
+	s.bots = append(s.bots, &b)
 }
 
 func (s *server) GetBot(name string) (Bot, error) {
 	var bot *Bot
-	for _, b := range *s.bots {
-		if b.GetName() == name {
-			bot = &b
+	for _, b := range s.bots {
+		if (*b).GetName() == name {
+			bot = b
 		}
 	}
 	if bot == nil {
@@ -99,9 +99,9 @@ func (s *server) GetBotQueue(name string) (*mq.MessageQueue, error) {
 func (s *server) Register(ctx context.Context, r *pb.RegisterRequest) (*pb.TokenReply, error) {
 	var bot Bot
 	var n = r.GetName()
-	for _, b := range *s.bots {
-		if b.GetName() == n {
-			bot = b
+	for _, b := range s.bots {
+		if (*b).GetName() == n {
+			bot = *b
 		}
 	}
 	if bot == nil {

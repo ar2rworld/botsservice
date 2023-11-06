@@ -15,7 +15,7 @@ func (b *OlaBot) GetToken() string {
 }
 
 func (*OlaBot) HandleUpdate(u *ms.Update) (ms.MessageReply, error) {
-	if u.Text == "a" {
+	if u.GetText() == "a" {
 		return ms.MessageReply{ Text: "b", ChatID: u.GetChatID(), UserID: u.GetUserID()}, nil
 	}
 	return ms.MessageReply{}, nil

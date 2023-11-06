@@ -16,7 +16,6 @@
  *
  */
 
-// Package main implements a client for Greeter service.
 package main
 
 import (
@@ -25,6 +24,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
 	pb "github.com/ar2rworld/botsservice/app/messageservice"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -82,7 +82,18 @@ func main() {
 
 	updateConfig.Timeout = 30
 	updates := bot.GetUpdatesChan(updateConfig)
-
+	
+	go func () {
+		time.Sleep(5 * time.Second)
+		stream, err := c.SendUpdates(ctx, &pb.Updates{ Botname: name })
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = CheckUpdates(stream, bot)
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
 	for update := range updates {
 		if update.Message == nil {
@@ -106,23 +117,31 @@ func main() {
 		if err != nil {
 			log.Println(err)
 		} else {
-			for {
-				mr, err := stream.Recv()
-				if err == io.EOF {
-					break
-				}
-				if err != nil {
-					log.Fatalf("%v.SendUpdates(_) = _, %v", c, err)
-				}
-				if mr.GetText() == "" {
-					continue
-				}
-				m := tgbotapi.NewMessage(mr.GetChatID(), mr.GetText())
-				_, err = bot.Send(m)
-				if err != nil {
-					log.Println(err)
-				}
+			err = CheckUpdates(stream, bot)
+			if err != nil {
+				log.Println(err)
 			}
 		}
 	}
+}
+
+func CheckUpdates(stream pb.MessageService_SendUpdatesClient, bot *tgbotapi.BotAPI) error {
+	for {
+		mr, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("SendUpdates(_) = _, %v", err)
+		}
+		if mr.GetText() == "" {
+			continue
+		}
+		m := tgbotapi.NewMessage(mr.GetChatID(), mr.GetText())
+		_, err = bot.Send(m)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
