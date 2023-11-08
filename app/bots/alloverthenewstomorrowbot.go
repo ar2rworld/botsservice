@@ -1,14 +1,17 @@
 package bots
 
-import ms "github.com/ar2rworld/botsservice/app/messageservice"
+import (
+	"github.com/ar2rworld/botsservice/app/bot"
+	ms "github.com/ar2rworld/botsservice/app/messageservice"
+)
 
 type AllOverTheNewsTomorrowBot struct {
-	token string
+	bot.BaseBot
 }
 
 
 func (*AllOverTheNewsTomorrowBot) GetName() string {
-	return "alloverthenewstomorrowbot"
+	return "all_over_the_news_tomorrow_bot"
 }
 
 func (b *AllOverTheNewsTomorrowBot) GetToken() string {
@@ -22,6 +25,6 @@ func (b *AllOverTheNewsTomorrowBot) HandleUpdate(u *ms.Update) (ms.MessageReply,
 	return ms.MessageReply{}, nil
 }
 
-func NewAllOverTheNewsTomorrowBot(t string) *AllOverTheNewsTomorrowBot {
-	return &AllOverTheNewsTomorrowBot{token: t}
+func NewAllOverTheNewsTomorrowBot() *AllOverTheNewsTomorrowBot {
+	return &AllOverTheNewsTomorrowBot{}
 }

@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/ar2rworld/botsservice/app/bot"
 	"github.com/ar2rworld/botsservice/app/bots"
 	mq "github.com/ar2rworld/botsservice/app/messagequeue"
 
@@ -15,14 +16,8 @@ import (
 	"google.golang.org/grpc"
 )
 
-type Bot interface {
-	HandleUpdate(*pb.Update) (pb.MessageReply, error)
-	GetName() string
-	GetToken() string
-}
-
 type BotQueue struct {
-	Bot Bot
+	Bot bot.Bot
 	Queue mq.MessageQueue
 }
 
@@ -42,13 +37,6 @@ func main() {
 
 	var opts []grpc.ServerOption
 
-	if os.Getenv("olabot_token") == "" {
-		log.Fatal("Missing olabot_token in env")
-	}
-	if os.Getenv("all_over_the_news_tomorrow_bot_token") == "" {
-		log.Fatal("Missing all_over_the_news_tomorrow_bot_token in env")
-	}
-
 	if os.Getenv("ADMIN_ID") == "" {
 		log.Fatal("Missing olabot_token in env")
 	}
@@ -60,8 +48,15 @@ func main() {
 
 	server := newServer()
 	server.AdminID = adminID
-	server.AddBot(bots.NewOlaBot(os.Getenv("olabot_token")))
-	server.AddBot(bots.NewAllOverTheNewsTomorrowBot(os.Getenv("all_over_the_news_tomorrow_bot_token")))
+	server.DBClient = *DBClient
+	err = server.AddBot(bots.NewOlaBot())
+	if err != nil {
+		log.Fatalf("Error adding a bot: %v", err)
+	}
+	err = server.AddBot(bots.NewAllOverTheNewsTomorrowBot())
+	if err != nil {
+		log.Fatalf("Error adding a bot: %v", err)
+	}
 
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterMessageServiceServer(grpcServer, server)
@@ -84,9 +79,17 @@ func newServer() *server {
 	return &server{ bq: map[string]BotQueue{} }
 }
 
-func (s *server) AddBot (b Bot) {
+func (s *server) AddBot (b bot.Bot) error {
 	name := b.GetName()
+
+	token := os.Getenv(fmt.Sprintf("%s_token", name))
+	if token == "" {
+		return fmt.Errorf("Missing %s_token in env", name)
+	}
+
+	b.SetToken(token)
 	s.bq[name] = BotQueue{ Bot: b, Queue: mq.NewMessageQueue(name)}
+	return nil
 }
 
 func (s *server) GetBotQueue(name string) (BotQueue, error) {

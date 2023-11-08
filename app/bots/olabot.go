@@ -1,17 +1,16 @@
 package bots
 
-import ms "github.com/ar2rworld/botsservice/app/messageservice"
+import (
+	ms "github.com/ar2rworld/botsservice/app/messageservice"
+	"github.com/ar2rworld/botsservice/app/bot"
+)
 
 type OlaBot struct {
-	token string
+	bot.BaseBot
 }
 
 func (*OlaBot) GetName() string {
 	return "olabot"
-}
-
-func (b *OlaBot) GetToken() string {
-	return b.token
 }
 
 func (*OlaBot) HandleUpdate(u *ms.Update) (ms.MessageReply, error) {
@@ -21,6 +20,6 @@ func (*OlaBot) HandleUpdate(u *ms.Update) (ms.MessageReply, error) {
 	return ms.MessageReply{}, nil
 }
 
-func NewOlaBot(t string) *OlaBot {
-	return &OlaBot{ token: t}
+func NewOlaBot() *OlaBot {
+	return &OlaBot{}
 }
