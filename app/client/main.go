@@ -70,12 +70,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// startMessage := tgbotapi.NewMessage(int64(-1001506079405), "Hello from " + name)
-	// _, err = bot.Send(startMessage)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
 	bot.Debug = true
 
 	updateConfig := tgbotapi.NewUpdate(0)
