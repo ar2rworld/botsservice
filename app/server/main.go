@@ -49,11 +49,11 @@ func main() {
 	server := newServer()
 	server.AdminID = adminID
 	server.DBClient = *DBClient
-	err = server.AddBot(bots.NewOlaBot())
+	err = server.AddBot(bots.NewOlaBot(), bot.BotConfig{})
 	if err != nil {
 		log.Fatalf("Error adding a bot: %v", err)
 	}
-	err = server.AddBot(bots.NewAllOverTheNewsTomorrowBot())
+	err = server.AddBot(bots.NewAllOverTheNewsTomorrowBot(), bot.BotConfig{DatabaseRequired: true})
 	if err != nil {
 		log.Fatalf("Error adding a bot: %v", err)
 	}
@@ -79,7 +79,7 @@ func newServer() *server {
 	return &server{ bq: map[string]BotQueue{} }
 }
 
-func (s *server) AddBot (b bot.Bot) error {
+func (s *server) AddBot (b bot.Bot, config bot.BotConfig) error {
 	name := b.GetName()
 
 	token := os.Getenv(fmt.Sprintf("%s_token", name))
