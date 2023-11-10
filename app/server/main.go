@@ -10,9 +10,11 @@ import (
 
 	"github.com/ar2rworld/botsservice/app/bot"
 	"github.com/ar2rworld/botsservice/app/bots"
+	"github.com/ar2rworld/botsservice/app/db"
 	mq "github.com/ar2rworld/botsservice/app/messagequeue"
 
 	pb "github.com/ar2rworld/botsservice/app/messageservice"
+	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
 )
 
@@ -45,6 +47,10 @@ func main() {
 		log.Fatal("Error converting ADMIN_ID")
 	}
 
+	DBClient, err := db.NewDBClient()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	server := newServer()
 	server.AdminID = adminID
@@ -72,6 +78,7 @@ type server struct {
 	bq map[string]BotQueue
 	pb.UnimplementedMessageServiceServer
 
+	DBClient mongo.Client
 	AdminID int64
 }
 
@@ -85,6 +92,15 @@ func (s *server) AddBot (b bot.Bot, config bot.BotConfig) error {
 	token := os.Getenv(fmt.Sprintf("%s_token", name))
 	if token == "" {
 		return fmt.Errorf("Missing %s_token in env", name)
+	}
+
+	if config.DatabaseRequired {
+		dbName := os.Getenv(fmt.Sprintf("%s_db", name))
+		if dbName == "" {
+			return fmt.Errorf("Missing %s_db", name)
+		}
+
+		b.SetDatabase(s.DBClient.Database(dbName))
 	}
 
 	b.SetToken(token)
