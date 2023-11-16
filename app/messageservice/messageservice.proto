@@ -22,6 +22,7 @@ package messageservice;
 service MessageService {
   rpc Register (RegisterRequest) returns (TokenReply) {}
   rpc SendUpdates (Updates) returns (stream MessageReply) {}
+  rpc CheckServer (ServerStatus) returns (ServerStatus) {}
 }
 
 message RegisterRequest {
@@ -45,4 +46,8 @@ message MessageReply {
   int64 chatID = 1;
   int64 userID = 2;
   string text = 3;
+}
+
+message ServerStatus {
+  bool available = 1;
 }
