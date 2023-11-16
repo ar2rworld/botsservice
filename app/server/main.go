@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"time"
 
 	"github.com/ar2rworld/botsservice/app/bot"
 	"github.com/ar2rworld/botsservice/app/bots"
@@ -14,6 +15,7 @@ import (
 	mq "github.com/ar2rworld/botsservice/app/messagequeue"
 
 	pb "github.com/ar2rworld/botsservice/app/messageservice"
+	"github.com/go-co-op/gocron"
 	"go.mongodb.org/mongo-driver/mongo"
 	"google.golang.org/grpc"
 )
@@ -52,17 +54,22 @@ func main() {
 		log.Fatal(err)
 	}
 
+	scheduler := gocron.NewScheduler(time.UTC)
+
 	server := newServer()
+	server.Scheduler = scheduler
 	server.AdminID = adminID
 	server.DBClient = *DBClient
 	err = server.AddBot(bots.NewOlaBot(), bot.BotConfig{})
 	if err != nil {
 		log.Fatalf("Error adding a bot: %v", err)
 	}
-	err = server.AddBot(bots.NewAllOverTheNewsTomorrowBot(), bot.BotConfig{DatabaseRequired: true})
+	err = server.AddBot(bots.NewAllOverTheNewsTomorrowBot(), bot.BotConfig{DatabaseRequired: true, SchedulerRequired: true})
 	if err != nil {
 		log.Fatalf("Error adding a bot: %v", err)
 	}
+
+	scheduler.StartAsync()
 
 	grpcServer := grpc.NewServer(opts...)
 	pb.RegisterMessageServiceServer(grpcServer, server)
@@ -80,6 +87,7 @@ type server struct {
 
 	DBClient mongo.Client
 	AdminID int64
+	Scheduler *gocron.Scheduler
 }
 
 func newServer() *server {
@@ -101,6 +109,11 @@ func (s *server) AddBot (b bot.Bot, config bot.BotConfig) error {
 		}
 
 		b.SetDatabase(s.DBClient.Database(dbName))
+	}
+
+	if config.SchedulerRequired {
+		b.SetScheduler(s.Scheduler)
+		b.SetupScheduler()
 	}
 
 	b.SetToken(token)
