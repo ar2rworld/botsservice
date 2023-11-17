@@ -117,7 +117,11 @@ func (s *server) AddBot (b bot.Bot, config bot.BotConfig) error {
 	}
 
 	b.SetToken(token)
-	s.bq[name] = BotQueue{ Bot: b, Queue: mq.NewMessageQueue(name)}
+
+	q := mq.NewMessageQueue(name)
+	b.SetQueue(&q)
+
+	s.bq[name] = BotQueue{ Bot: b, Queue: q}
 	return nil
 }
 
