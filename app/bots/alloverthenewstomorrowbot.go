@@ -27,7 +27,7 @@ func (b *AllOverTheNewsTomorrowBot) HandleUpdate(u *ms.Update) (ms.MessageReply,
 		}
 		case "/help": {
 			return ms.MessageReply{ Text: `/tomorrow to get a random prediction
-				/subscribe - to subsribe and to unsubscribe from daily notification
+				/subscribe - to subscribe and to unsubscribe from daily notification
 				/whoAreYouByDima dayIndex monthIndex //integers please`,
 				ChatID: u.GetChatID(),
 				UserID: u.GetUserID(),
