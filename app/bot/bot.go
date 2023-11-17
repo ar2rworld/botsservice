@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"github.com/ar2rworld/botsservice/app/messagequeue"
 	pb "github.com/ar2rworld/botsservice/app/messageservice"
 	"github.com/go-co-op/gocron"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,11 +17,14 @@ type Bot interface {
 	SetScheduler(*gocron.Scheduler)
 	GetScheduler() *gocron.Scheduler
 	SetupScheduler()
+	SetQueue(*messagequeue.MessageQueue)
+	GetQueue() *messagequeue.MessageQueue
 }
 
 type BaseBot struct {
 	token string
 
+	messagequeue *messagequeue.MessageQueue
 	scheduler *gocron.Scheduler
 	Database *mongo.Database
 }
@@ -48,3 +52,10 @@ func (b *BaseBot) GetScheduler() *gocron.Scheduler {
 	return b.scheduler
 }
 func (b *BaseBot) SetupScheduler() {}
+
+func (b *BaseBot) GetQueue() *messagequeue.MessageQueue {
+	return b.messagequeue
+}
+func (b *BaseBot) SetQueue(q *messagequeue.MessageQueue) {
+	b.messagequeue = q
+}
