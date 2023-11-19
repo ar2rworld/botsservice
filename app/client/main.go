@@ -110,6 +110,8 @@ func main() {
 						return err
 					}
 
+					updatesToSend := []*pb.Update{}
+
 					for _, update := range updates {
 						if update.UpdateID >= updateConfig.Offset {
 							updateConfig.Offset = update.UpdateID + 1
@@ -118,27 +120,24 @@ func main() {
 						if update.Message == nil {
 							continue
 						}
-			
-						u := &pb.Update{
-							ChatID: update.Message.Chat.ID,
-							UserID: update.Message.From.ID,
-							Text: update.Message.Text,
-						}
-			
-						stream, err := c.SendUpdates(
-							ctx,
-							&pb.Updates{
-								Botname: name,
-								Updates: []*pb.Update{ u },
-							},
-						)
+
+						u := ToUpdate(update)
+						updatesToSend = append(updatesToSend, u)
+					}
+					
+					stream, err := c.SendUpdates(
+						ctx,
+						&pb.Updates{
+							Botname: name,
+							Updates: updatesToSend,
+						},
+					)
+					if err != nil {
+						return err
+					} else {
+						err = CheckUpdates(stream, bot)
 						if err != nil {
 							return err
-						} else {
-							err = CheckUpdates(stream, bot)
-							if err != nil {
-								return err
-							}
 						}
 					}
 				case <- ctx.Done():
@@ -171,4 +170,28 @@ func CheckUpdates(stream pb.MessageService_SendUpdatesClient, bot *tgbotapi.BotA
 		}
 	}
 	return nil
+}
+
+func ToUpdate(u tgbotapi.Update) *pb.Update {
+	pbUpdate := &pb.Update{
+		ChatID: u.Message.Chat.ID,
+		UserID: u.Message.From.ID,
+		Text:   u.Message.Text,
+	}
+	
+	if u.Message == nil {
+		return pbUpdate
+	}
+
+	pbUpdate.Message = &pb.Message{
+		MessageID: int64(u.Message.MessageID),
+		Text: u.Message.Text,
+		Chat: &pb.Chat{
+			ID: u.Message.Chat.ID,
+			Type: u.Message.Chat.Type,
+			Title: u.Message.Chat.Title,
+		},
+	}
+
+	return pbUpdate
 }
