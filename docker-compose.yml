@@ -1,0 +1,31 @@
+version: '3.9'
+
+services:
+  server:
+    image: ar2rworld/botsservice:main
+    restart: always
+    container_name: server
+    env_file:
+      - .env
+    ports:
+      - ${MESSAGESERVICE_PORT}:${MESSAGESERVICE_PORT}
+
+  client_all_over_the_news_tomorrow_bot:
+    image: ar2rworld/botsservice:main
+    restart: always
+    container_name: all_over_the_news_tomorrow_bot
+    command: ./client
+    env_file:
+      - all_over_the_news_tomorrow_bot.env
+    depends_on:
+      - server
+
+  client_olabot:
+    image: ar2rworld/botsservice:main
+    restart: always
+    container_name: olabot
+    command: ./client
+    env_file:
+      - olabot.env
+    depends_on:
+      - server
