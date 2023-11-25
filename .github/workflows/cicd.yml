@@ -16,7 +16,9 @@ jobs:
         with:
           go-version: '1.21' # The Go version to download (if necessary) and use.
       - name: Install dependencies
-        run: go get ./app
+        run: |
+          go get ./app/server
+          go get ./app/client
       - name: Build
         run: |
           go build -o server ./app/server
