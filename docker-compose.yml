@@ -5,18 +5,18 @@ services:
     image: ar2rworld/botsservice:main
     restart: always
     container_name: server
-    env_file:
-      - .env
     ports:
-      - ${MESSAGESERVICE_PORT}:${MESSAGESERVICE_PORT}
+      - 50052:50052
 
   client_all_over_the_news_tomorrow_bot:
     image: ar2rworld/botsservice:main
     restart: always
     container_name: all_over_the_news_tomorrow_bot
     command: ./client
-    env_file:
-      - all_over_the_news_tomorrow_bot.env
+    environment:
+      MESSAGESERVICE_ADDRESS: server
+      MESSAGESERVICE_PORT: 50052
+      NAME: olabot
     depends_on:
       - server
 
@@ -25,7 +25,9 @@ services:
     restart: always
     container_name: olabot
     command: ./client
-    env_file:
-      - olabot.env
+    environment:
+      MESSAGESERVICE_ADDRESS: server
+      MESSAGESERVICE_PORT: 50052
+      NAME: all_over_the_news_tomorrow_bot
     depends_on:
       - server
