@@ -10,7 +10,7 @@ services:
 
   client_all_over_the_news_tomorrow_bot:
     image: ar2rworld/botsservice:main
-    restart: always
+    # restart: always
     container_name: all_over_the_news_tomorrow_bot
     command: ./client
     environment:
@@ -22,7 +22,7 @@ services:
 
   client_olabot:
     image: ar2rworld/botsservice:main
-    restart: always
+    # restart: always
     container_name: olabot
     command: ./client
     environment:
