@@ -5,6 +5,8 @@ services:
     image: ar2rworld/botsservice:main
     restart: always
     container_name: server
+    env_file:
+      - stack.env
     ports:
       - 50052:50052
 
